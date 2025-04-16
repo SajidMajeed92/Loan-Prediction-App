@@ -74,8 +74,17 @@ input_array = input_encoded.to_numpy()
 
 # Prediction
 if st.sidebar.button("Predict Loan Status"):
-    prediction = model.predict(input_array)
-    prediction_proba = model.predict_proba(input_array)[0][1]
+    if input_encoded.shape[1] != len(expected_features):
+        st.error(f"Feature mismatch: expected {len(expected_features)} but got {input_encoded.shape[1]}.")
+        st.stop()
+
+    prediction = model.predict(input_encoded)
+    prediction_proba = model.predict_proba(input_encoded)[0][1]
+
+    if prediction[0] == 1:
+        st.success(f"✅ Loan Approved (Probability: {prediction_proba:.2%})")
+    else:
+        st.error(f"❌ Loan Not Approved (Probability: {prediction_proba:.2%})")
 
     if prediction[0] == 1:
         st.success(f"\u2705 Loan Approved (Probability: {prediction_proba:.2%})")

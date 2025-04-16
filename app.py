@@ -1,4 +1,3 @@
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -22,6 +21,14 @@ def load_model(path):
         return pickle.load(file)
 
 model = load_model(model_path)
+
+# Load expected feature names used during training
+try:
+    with open("train_features.pkl", "rb") as f:
+        expected_features = pickle.load(f)
+except FileNotFoundError:
+    st.error("Required file 'train_features.pkl' not found. Please ensure it is uploaded.")
+    st.stop()
 
 # Input fields
 st.sidebar.header('Enter Loan Applicant Details')
@@ -56,24 +63,21 @@ input_dict = {
 input_df = pd.DataFrame([input_dict])
 input_encoded = pd.get_dummies(input_df, drop_first=True)
 
-# Ensure input and model have same features
-train_features = ['ApplicantIncome', 'CoapplicantIncome', 'LoanAmount', 'Loan_Amount_Term', 'Credit_History',
-                  'Gender_Male', 'Married_Yes', 'Dependents_1', 'Dependents_2', 'Dependents_3+',
-                  'Education_Not Graduate', 'Self_Employed_Yes', 'Property_Area_Semiurban', 'Property_Area_Urban']
-
-for col in train_features:
+# Add missing columns and align order
+for col in expected_features:
     if col not in input_encoded.columns:
         input_encoded[col] = 0
+input_encoded = input_encoded[expected_features]
 
-input_encoded = input_encoded[train_features]
+# Convert to numpy array for compatibility
+input_array = input_encoded.to_numpy()
 
 # Prediction
 if st.sidebar.button("Predict Loan Status"):
-    prediction = model.predict(input_encoded.values, check_input=False)
-    prediction_proba = model.predict_proba(input_encoded.values, check_input=False)[0][1]
+    prediction = model.predict(input_array)
+    prediction_proba = model.predict_proba(input_array)[0][1]
 
     if prediction[0] == 1:
-        st.success(f"✅ Loan Approved (Probability: {prediction_proba:.2%})")
+        st.success(f"\u2705 Loan Approved (Probability: {prediction_proba:.2%})")
     else:
-        st.error(f"❌ Loan Not Approved (Probability: {prediction_proba:.2%})")
-
+        st.error(f"\u274C Loan Not Approved (Probability: {prediction_proba:.2%})")

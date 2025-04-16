@@ -70,9 +70,11 @@ for col in expected_features:
 input_encoded = input_encoded[expected_features]
 
 # Debugging: Print feature alignment
-st.text("Expected Features:\\n" + str(expected_features))
-st.text("Input Features:\\n" + str(input_encoded.columns.tolist()))
-
+st.subheader("Debug Info")
+st.text("Expected Features:
+" + str(expected_features)))
+st.text("Input Features:
+" + str(input_encoded.columns.tolist()))))
 
 # Prediction
 if st.sidebar.button("Predict Loan Status"):
